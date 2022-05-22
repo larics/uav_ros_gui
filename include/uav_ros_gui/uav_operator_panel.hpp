@@ -2,11 +2,13 @@
 
 #include <rqt_gui_cpp/plugin.h>
 #include <uav_ros_gui/ui_example.h>
+#include <uav_ros_gui/uav_ros_api.hpp>
 
 #include <ros/ros.h>
 
 #include <QWidget>
 #include <QObject>
+#include <QSlider>
 
 namespace uav_ros_gui {
 
@@ -56,6 +58,10 @@ private:
 
   ros::NodeHandle nh_;
 
+  QSlider* m_takeoff_slider;
+
+  uav_ros_api::UAV m_uav_handle;
+
   /* ======================================================================== */
   /* Methods                                                                  */
   /* ======================================================================== */
@@ -80,7 +86,7 @@ protected slots:
   /* Slots                                                                    */
   /* ======================================================================== */
 
-
+  void takeoff_slider_released();
 
 signals:
 

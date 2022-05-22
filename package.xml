@@ -15,6 +15,7 @@
   <depend>rqt_gui_cpp</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>uav_ros_msgs</depend>
 
 
   <export>

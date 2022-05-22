@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   rqt_gui_cpp
   std_msgs
   sensor_msgs
-
+  uav_ros_msgs
 )
 
 if ("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")
@@ -50,9 +50,9 @@ if(NOT EXISTS ${ui_INCLUDE_DIR})
 endif()
 
 catkin_package(
-#  INCLUDE_DIRS
-#    ${${PROJECT_NAME}_INCLUDE_DIRECTORIES}
-#  LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS
+    ${${PROJECT_NAME}_INCLUDE_DIRECTORIES}
+  LIBRARIES ${PROJECT_NAME} uav_ros_api
   CATKIN_DEPENDS
     rqt_gui
     rqt_gui_cpp
@@ -88,6 +88,9 @@ else()
 endif()
 set(CMAKE_CURRENT_BINARY_DIR "${_cmake_current_binary_dir}")
 
+add_library(uav_ros_api src/uav_ros_api.cpp)
+target_link_libraries(uav_ros_api ${catkin_LIBRARIES})
+
 add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS}
   ${${PROJECT_NAME}_HDRS}
@@ -97,7 +100,7 @@ add_library(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES} uav_ros_api
 )
 
 if ("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")

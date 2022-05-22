@@ -1,10 +1,12 @@
 #include <qgridlayout.h>
 #include <qgroupbox.h>
 #include <qnamespace.h>
+#include <qspinbox.h>
 #include <uav_ros_gui/uav_operator_panel.hpp>
 
 #include <pluginlib/class_list_macros.h>
 
+#include <QSpinBox>
 #include <QTextEdit>
 #include <QPushButton>
 #include <QHBoxLayout>
@@ -12,7 +14,8 @@
 #include <QLabel>
 #include <QGroupBox>
 #include <QDateEdit>
-#include <QSlider>
+#include <QCheckBox>
+#include <QMessageBox>
 
 namespace uav_ros_gui {
 
@@ -52,7 +55,7 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
   // UAV control panel buttons
   auto takeoff_slider_label  = new QLabel("Takeoff Slider");
-  auto takeoff_slider        = new QSlider(Qt::Orientation::Horizontal);
+  m_takeoff_slider           = new QSlider(Qt::Orientation::Horizontal);
   auto land_button           = new QPushButton("Land");
   auto pos_hold_button       = new QPushButton("Position Hold");
   auto tracker_enable_button = new QPushButton("Tracker Enable");
@@ -60,7 +63,7 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   // Make a takeoff slider panel
   auto takeoff_vlayout = new QHBoxLayout();
   takeoff_vlayout->addWidget(takeoff_slider_label);
-  takeoff_vlayout->addWidget(takeoff_slider);
+  takeoff_vlayout->addWidget(m_takeoff_slider);
 
   // UAV control panel layout
   auto uav_control_panel_vlayout = new QVBoxLayout;
@@ -74,6 +77,12 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   uav_control_panel->setLayout(uav_control_panel_vlayout);
   uav_control_panel->setStyleSheet(box_style);
   uav_control_panel->setSizePolicy(sp);
+
+  // UAV control panel signals/slots
+  connect(m_takeoff_slider,
+          &QSlider::sliderReleased,
+          this,
+          &UAVOperatorPanel::takeoff_slider_released);
 
   /* MISSION CONTROL */
 
@@ -145,6 +154,56 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
   widget_->setLayout(main_grid);
   context.addWidget(widget_);
+}
+
+void UAVOperatorPanel::takeoff_slider_released()
+{
+  const auto slider_value = m_takeoff_slider->value();
+  ROS_INFO("[UAVOperatorPanel] takeoff slider released, value %d", slider_value);
+  m_takeoff_slider->setValue(0);
+
+  const auto slider_max = m_takeoff_slider->maximum();
+  if (slider_value < slider_max) { return; }
+
+  ROS_INFO("[UAVOperatorPanel] Takeoff requested");
+
+  auto        carrot_checkbox   = new QCheckBox("Enable Carrot");
+  auto        offboard_checkbox = new QCheckBox("Set Offboard");
+  QMessageBox msgBox;
+  msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+  msgBox.setDefaultButton(QMessageBox::Cancel);
+  msgBox.setWindowTitle("DANGER: TAKEOFF!");
+  carrot_checkbox->setToolTip(
+    "Enable Carrot by publishing the correct Joy message, DO NOT CLICK THIS CHECKBOX "
+    "UNLESS YOU ARE IN SIMULATION!");
+  offboard_checkbox->setToolTip(
+    "Set GUIDED_NOGPS mode, DO NOT CLICK THIS CHECKBOX UNLESS YOU ARE IN SIMULATION!");
+  msgBox.setCheckBox(carrot_checkbox);
+
+  auto alt_label    = new QLabel(tr("Takeoff Relative Alt"));
+  auto alt_spin_box = new QDoubleSpinBox;
+  alt_spin_box->setRange(0, 20);
+  alt_spin_box->setSingleStep(0.1);
+  alt_spin_box->setValue(1.2);
+
+  QGridLayout* grid  = qobject_cast<QGridLayout*>(msgBox.layout());
+  int          index = grid->indexOf(carrot_checkbox);
+  int          row, column, rowSpan, columnSpan;
+  grid->getItemPosition(index, &row, &column, &rowSpan, &columnSpan);
+  grid->addWidget(offboard_checkbox, row, column + 1, rowSpan, columnSpan);
+  grid->addWidget(alt_label, row + 1, column, rowSpan, columnSpan);
+  grid->addWidget(alt_spin_box, row + 1, column + 1, rowSpan, columnSpan);
+
+  int ret = msgBox.exec();
+  if (ret != QMessageBox::Yes) { return; }
+
+  const auto enable_carrot = carrot_checkbox->isChecked();
+  const auto set_offboard  = offboard_checkbox->isChecked();
+  const auto alt_height    = alt_spin_box->value();
+  ROS_INFO(
+    "[UAVOperatorPanel] Takeoff [%d, %d, %.2f]", enable_carrot, set_offboard, alt_height);
+
+  m_uav_handle.armAndTakeoff(alt_height, enable_carrot, set_offboard);
 }
 
 void UAVOperatorPanel::shutdownPlugin() {}
