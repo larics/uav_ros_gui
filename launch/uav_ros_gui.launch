@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <node pkg="uav_ros_gui" type="uav_ros_gui" name="uav_ros_gui_node"
+        output="screen">
+  </node>
+</launch>

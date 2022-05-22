@@ -1,0 +1,19 @@
+<library path="lib/libuav_ros_gui">
+  <class name="uav_ros_gui/UAVOperatorPanel"
+         type="uav_ros_gui::UAVOperatorPanel"
+         base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      A GUI plugin to ...
+    </description>
+    <qtgui>
+      <group>
+        <label>uav_ros_gui</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to operating UAVs</statustip>
+      </group>
+      <label>UAV Operator Panel</label>
+      <icon type="theme">image-x-generic</icon>
+      <statustip>A GUI plugin to operate the UAV</statustip>
+    </qtgui>
+  </class>
+</library>

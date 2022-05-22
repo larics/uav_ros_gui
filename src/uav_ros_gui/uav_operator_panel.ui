@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UAVOperatorPanelWidget</class>
+ <widget class="QWidget" name="UAVOperatorPanelWidget">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>558</width>
+    <height>376</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>uav_ros_gui</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
