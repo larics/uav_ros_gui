@@ -44,8 +44,9 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   sp.setHorizontalStretch(1);
   sp.setVerticalStretch(1);
 
-  // Add border for changing text
+  // Styles
   const QString border_style("border: 1px solid black;");
+  const QString box_style("font-size: 14px;");
 
   /* UAV CONTROL */
 
@@ -71,6 +72,8 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   // UAV control panel group
   auto uav_control_panel = new QGroupBox(tr("UAV Control Panel"));
   uav_control_panel->setLayout(uav_control_panel_vlayout);
+  uav_control_panel->setStyleSheet(box_style);
+  uav_control_panel->setSizePolicy(sp);
 
   /* MISSION CONTROL */
 
@@ -85,12 +88,14 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   auto mission_control_panel_grid = new QGridLayout();
   mission_control_panel_grid->addWidget(mission_start_button, 1, 0);
   mission_control_panel_grid->addWidget(mission_stop_button, 1, 1);
-  mission_control_panel_grid->addWidget(mission_info_label, 0, 0);
+  mission_control_panel_grid->addWidget(mission_info_label, 0, 0, Qt::AlignCenter);
   mission_control_panel_grid->addWidget(mission_info_text, 0, 1);
 
   // Mission control panel group
   auto mission_control_panel = new QGroupBox(tr("Mission Control Panel"));
   mission_control_panel->setLayout(mission_control_panel_grid);
+  mission_control_panel->setStyleSheet(box_style);
+  mission_control_panel->setSizePolicy(sp);
 
   /* STATUS PANEL */
 
@@ -112,41 +117,33 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
   // Status panel layout
   auto status_panel_layout = new QGridLayout();
-  status_panel_layout->addWidget(carrot_status_label, 0, 0);
+  status_panel_layout->addWidget(carrot_status_label, 0, 0, Qt::AlignCenter);
   status_panel_layout->addWidget(carrot_status_text, 0, 1);
-  status_panel_layout->addWidget(tracker_status_label, 1, 0);
+  status_panel_layout->addWidget(tracker_status_label, 1, 0, Qt::AlignCenter);
   status_panel_layout->addWidget(tracker_status_text, 1, 1);
-  status_panel_layout->addWidget(mission_status_label, 2, 0);
+  status_panel_layout->addWidget(mission_status_label, 2, 0, Qt::AlignCenter);
   status_panel_layout->addWidget(mission_status_text, 2, 1);
-  status_panel_layout->addWidget(task_status_label, 3, 0);
+  status_panel_layout->addWidget(task_status_label, 3, 0, Qt::AlignCenter);
   status_panel_layout->addWidget(task_status_text, 3, 1);
 
   // Status panel group
   auto status_panel = new QGroupBox(tr("Status Panel"));
+  status_panel->setStyleSheet(box_style);
+  status_panel->setSizePolicy(sp);
   status_panel->setLayout(status_panel_layout);
 
   /* MAIN SETUP */
 
   // Outer Layer
 
-  uav_control_panel->setSizePolicy(sp);
-  mission_control_panel->setSizePolicy(sp);
 
   // Make a top row layout
-  auto topLayout = new QHBoxLayout;
-  topLayout->addWidget(uav_control_panel);
-  topLayout->addWidget(mission_control_panel);
+  auto main_grid = new QGridLayout;
+  main_grid->addWidget(uav_control_panel, 0, 0);
+  main_grid->addWidget(mission_control_panel, 0, 1);
+  main_grid->addWidget(status_panel, 1, 0, 1, 2);
 
-  // Make the main layout
-  auto mainLayout = new QVBoxLayout;
-  mainLayout->addLayout(topLayout);
-  mainLayout->addWidget(status_panel);
-
-  // Properly position the elements
-  mainLayout->setStretch(0, 1);
-  mainLayout->setStretch(1, 1);
-
-  widget_->setLayout(mainLayout);
+  widget_->setLayout(main_grid);
   context.addWidget(widget_);
 }
 
