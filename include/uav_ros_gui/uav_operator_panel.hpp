@@ -1,7 +1,6 @@
 #pragma once
 
 #include <rqt_gui_cpp/plugin.h>
-#include <uav_ros_gui/ui_example.h>
 #include <uav_ros_gui/uav_ros_api.hpp>
 
 #include <ros/ros.h>
@@ -53,7 +52,6 @@ private:
   /* Variables                                                                */
   /* ======================================================================== */
 
-  Ui::UAVOperatorPanelWidget ui_;
   QWidget* widget_;
 
   ros::NodeHandle nh_;
