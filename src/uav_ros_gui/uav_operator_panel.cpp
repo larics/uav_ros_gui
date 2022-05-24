@@ -83,6 +83,8 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           &QSlider::sliderReleased,
           this,
           &UAVOperatorPanel::takeoff_slider_released);
+  connect(
+    land_button, &QPushButton::released, this, &UAVOperatorPanel::land_button_released);
 
   /* MISSION CONTROL */
 
@@ -156,6 +158,30 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   context.addWidget(widget_);
 }
 
+void UAVOperatorPanel::land_button_released()
+{
+  auto force_land = new QCheckBox("Force Land");
+  force_land->setChecked(true);
+  force_land->setToolTip(
+    "True if you want to cancel mission / trajectory, otherwise false");
+
+  QMessageBox msgBox;
+  msgBox.setText("DANGER: Land!");
+  msgBox.setInformativeText("Do you want to land.");
+  msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+  msgBox.setDefaultButton(QMessageBox::Cancel);
+  msgBox.setWindowTitle("Landing Box");
+  msgBox.setCheckBox(force_land);
+
+  int ret = msgBox.exec();
+  if (ret != QMessageBox::Yes) { return; }
+
+  const auto force_land_check = force_land->isChecked();
+  auto [success, message]     = m_uav_handle.land(force_land_check);
+
+  make_a_simple_msg_box("Land Response", message);
+}
+
 void UAVOperatorPanel::takeoff_slider_released()
 {
   const auto slider_value = m_takeoff_slider->value();
@@ -170,6 +196,8 @@ void UAVOperatorPanel::takeoff_slider_released()
   auto        carrot_checkbox   = new QCheckBox("Enable Carrot");
   auto        offboard_checkbox = new QCheckBox("Set Offboard");
   QMessageBox msgBox;
+  msgBox.setText("DANGER: Takeoff!");
+  msgBox.setInformativeText("Do you know what you are doing?");
   msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
   msgBox.setDefaultButton(QMessageBox::Cancel);
   msgBox.setWindowTitle("DANGER: TAKEOFF!");
@@ -203,7 +231,19 @@ void UAVOperatorPanel::takeoff_slider_released()
   ROS_INFO(
     "[UAVOperatorPanel] Takeoff [%d, %d, %.2f]", enable_carrot, set_offboard, alt_height);
 
-  m_uav_handle.armAndTakeoff(alt_height, enable_carrot, set_offboard);
+  auto [success, message] =
+    m_uav_handle.armAndTakeoff(alt_height, enable_carrot, set_offboard);
+
+  make_a_simple_msg_box("Takeoff Response", message);
+}
+
+void UAVOperatorPanel::make_a_simple_msg_box(const std::string& title,
+                                             const std::string& text)
+{
+  QMessageBox msgBox;
+  msgBox.setText(QString::fromStdString(title));
+  msgBox.setInformativeText(QString::fromStdString(text));
+  msgBox.exec();
 }
 
 void UAVOperatorPanel::shutdownPlugin() {}
