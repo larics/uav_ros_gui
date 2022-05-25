@@ -61,6 +61,10 @@ private:
   uav_ros_api::UAV m_uav_handle;
 
   QLabel* m_carrot_status_text;
+  QLabel* m_tracker_status_text;
+  QLabel* m_mission_status_text;
+  QLabel* m_task_status_text;
+  QLabel* m_task_info_text;
 
   /* ======================================================================== */
   /* Methods                                                                  */

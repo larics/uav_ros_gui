@@ -17,18 +17,35 @@ uav_ros_api::UAV::UAV()
 
   m_carrot_status_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "carrot/status");
+  m_tracker_status_handler =
+    ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "tracker/status");
+  m_mission_status_handler = ros_util::CreateTopicHandlerMutexed<std_msgs::String>(
+    m_nh, "waypoint_publisher/state");
+  m_task_status_handler =
+    ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "task/state");
+  m_task_info_handler =
+    ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "task/status");
 
   ROS_INFO("[UAV] Nemaspace %s", m_nh.getNamespace().c_str());
 }
 
 std::string uav_ros_api::UAV::getCarrotStatus()
 {
-  if (m_carrot_status_handler == nullptr
-      || !m_carrot_status_handler->isMessageRecieved()) {
-    return "NO MESSAGES";
-  }
-  return m_carrot_status_handler->getData().data;
+  return get_status(m_carrot_status_handler);
 }
+std::string uav_ros_api::UAV::getTrackerStatus()
+{
+  return get_status(m_tracker_status_handler);
+}
+std::string uav_ros_api::UAV::getMissionStatus()
+{
+  return get_status(m_mission_status_handler);
+}
+std::string uav_ros_api::UAV::getTaskStatus()
+{
+  return get_status(m_task_status_handler);
+}
+std::string uav_ros_api::UAV::getTaskInfo() { return get_status(m_task_info_handler); }
 
 std::tuple<bool, std::string> uav_ros_api::UAV::enablePositionHold()
 {

@@ -127,27 +127,32 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   auto tracker_status_label = new QLabel(tr("Tracker Status"));
   auto mission_status_label = new QLabel(tr("Mission Status"));
   auto task_status_label    = new QLabel(tr("Task Status"));
+  auto task_info_label      = new QLabel(tr("Task Info"));
 
-  m_carrot_status_text     = new QLabel(tr("NO MESSAGES"));
-  auto tracker_status_text = new QLabel(tr("NO MESSAGES"));
-  auto mission_status_text = new QLabel(tr("NO MESSAGES"));
-  auto task_status_text    = new QLabel(tr("NO MESSAGES"));
+  m_carrot_status_text  = new QLabel(tr("NO MESSAGES"));
+  m_tracker_status_text = new QLabel(tr("NO MESSAGES"));
+  m_mission_status_text = new QLabel(tr("NO MESSAGES"));
+  m_task_status_text    = new QLabel(tr("NO MESSAGES"));
+  m_task_info_text      = new QLabel(tr("NO MESSAGES"));
 
   m_carrot_status_text->setStyleSheet(border_style);
-  tracker_status_text->setStyleSheet(border_style);
-  mission_status_text->setStyleSheet(border_style);
-  task_status_text->setStyleSheet(border_style);
+  m_tracker_status_text->setStyleSheet(border_style);
+  m_mission_status_text->setStyleSheet(border_style);
+  m_task_status_text->setStyleSheet(border_style);
+  m_task_info_text->setStyleSheet(border_style);
 
   // Status panel layout
   auto status_panel_layout = new QGridLayout();
   status_panel_layout->addWidget(carrot_status_label, 0, 0, Qt::AlignCenter);
   status_panel_layout->addWidget(m_carrot_status_text, 0, 1);
   status_panel_layout->addWidget(tracker_status_label, 1, 0, Qt::AlignCenter);
-  status_panel_layout->addWidget(tracker_status_text, 1, 1);
+  status_panel_layout->addWidget(m_tracker_status_text, 1, 1);
   status_panel_layout->addWidget(mission_status_label, 2, 0, Qt::AlignCenter);
-  status_panel_layout->addWidget(mission_status_text, 2, 1);
+  status_panel_layout->addWidget(m_mission_status_text, 2, 1);
   status_panel_layout->addWidget(task_status_label, 3, 0, Qt::AlignCenter);
-  status_panel_layout->addWidget(task_status_text, 3, 1);
+  status_panel_layout->addWidget(m_task_status_text, 3, 1);
+  status_panel_layout->addWidget(task_info_label, 4, 0, Qt::AlignCenter);
+  status_panel_layout->addWidget(m_task_info_text, 4, 1);
 
   // Status panel group
   auto status_panel = new QGroupBox(tr("Status Panel"));
@@ -188,10 +193,11 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
 void UAVOperatorPanel::update_status_labels()
 {
-  ROS_INFO("[UAVOperatorPanel] timer");
-  const auto carrot_status = m_uav_handle.getCarrotStatus();
-  ROS_INFO("[%s]", carrot_status.c_str());
-  m_carrot_status_text->setText(QString::fromStdString(carrot_status));
+  m_carrot_status_text->setText(QString::fromStdString(m_uav_handle.getCarrotStatus()));
+  m_tracker_status_text->setText(QString::fromStdString(m_uav_handle.getTrackerStatus()));
+  m_mission_status_text->setText(QString::fromStdString(m_uav_handle.getMissionStatus()));
+  m_task_status_text->setText(QString::fromStdString(m_uav_handle.getTaskStatus()));
+  m_task_info_text->setText(QString::fromStdString(m_uav_handle.getTaskInfo()));
 }
 
 void UAVOperatorPanel::tracker_enable_released()
