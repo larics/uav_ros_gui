@@ -22,6 +22,8 @@ public:
   std::tuple<bool, std::string> enableTracker();
   std::tuple<bool, std::string> resetTracker();
   std::tuple<bool, std::string> enablePositionHold();
+  std::tuple<bool, std::string> publishWaypoints();
+  std::tuple<bool, std::string> clearWaypoints();
 
   std::string getCarrotStatus();
   std::string getTrackerStatus();
@@ -45,6 +47,8 @@ private:
   ros::ServiceClient m_tracker_enable;
   ros::ServiceClient m_tracker_reset;
   ros::ServiceClient m_pos_hold_client;
+  ros::ServiceClient m_start_mission_client;
+  ros::ServiceClient m_clear_mission_client;
 
   StringTopicHandler::Ptr m_carrot_status_handler;
   StringTopicHandler::Ptr m_tracker_status_handler;

@@ -120,6 +120,17 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   mission_control_panel->setStyleSheet(box_style);
   mission_control_panel->setSizePolicy(sp);
 
+  // Mission control signals
+
+  connect(mission_start_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::start_mission_released);
+  connect(mission_stop_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::clear_mission_released);
+
   /* STATUS PANEL */
 
   // Status panel widgets
@@ -214,6 +225,18 @@ void UAVOperatorPanel::tracker_reset_released()
   make_a_simple_msg_box("Tracker reset response", message);
 }
 
+void UAVOperatorPanel::start_mission_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Start mission released");
+  auto [success, message] = m_uav_handle.publishWaypoints();
+  make_a_simple_msg_box("Start mission response", message);
+}
+void UAVOperatorPanel::clear_mission_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Clear mission released");
+  auto [success, message] = m_uav_handle.clearWaypoints();
+  make_a_simple_msg_box("Clear mission response", message);
+}
 void UAVOperatorPanel::pos_hold_released()
 {
   ROS_INFO("[UAVOperatorPanel] Position hold released");

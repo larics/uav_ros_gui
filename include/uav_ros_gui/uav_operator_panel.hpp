@@ -93,6 +93,8 @@ protected slots:
   void tracker_enable_released();
   void tracker_reset_released();
   void pos_hold_released();
+  void start_mission_released();
+  void clear_mission_released();
   void update_status_labels();
 
 signals:

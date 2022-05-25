@@ -14,6 +14,9 @@ uav_ros_api::UAV::UAV()
   m_tracker_enable  = m_nh.serviceClient<std_srvs::SetBool>("tracker/enable");
   m_tracker_reset   = m_nh.serviceClient<std_srvs::Empty>("tracker/reset");
   m_pos_hold_client = m_nh.serviceClient<std_srvs::Empty>("position_hold");
+  m_start_mission_client =
+    m_nh.serviceClient<std_srvs::Empty>("mission_loader/publish_waypoints");
+  m_clear_mission_client = m_nh.serviceClient<std_srvs::SetBool>("clear_waypoints");
 
   m_carrot_status_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "carrot/status");
@@ -47,9 +50,34 @@ std::string uav_ros_api::UAV::getTaskStatus()
 }
 std::string uav_ros_api::UAV::getTaskInfo() { return get_status(m_task_info_handler); }
 
+std::tuple<bool, std::string> uav_ros_api::UAV::publishWaypoints()
+{
+  std_srvs::Empty wp_srv;
+  auto            success = m_start_mission_client.call(wp_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to start mission.");
+    return std::make_tuple<bool, std::string>(false, "Unable to start mission");
+  }
+
+  return std::make_tuple<bool, std::string>(true, "Mission started.");
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::clearWaypoints()
+{
+  std_srvs::SetBool clear_srv;
+  clear_srv.request.data = true;
+  auto success           = m_clear_mission_client.call(clear_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to clear mission.");
+    return std::make_tuple<bool, std::string>(false, "Unable to clear mission");
+  }
+
+  return std::make_tuple<bool, std::string>(clear_srv.response.success,
+                                            std::string(clear_srv.response.message));
+}
+
 std::tuple<bool, std::string> uav_ros_api::UAV::enablePositionHold()
 {
-
   std_srvs::Empty pos_hold_srv;
   auto            success = m_pos_hold_client.call(pos_hold_srv);
   if (!success) {
