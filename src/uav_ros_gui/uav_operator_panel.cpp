@@ -6,12 +6,13 @@
 
 #include <pluginlib/class_list_macros.h>
 
+#include <QThread>
+#include <QTimer>
 #include <QSpinBox>
 #include <QTextEdit>
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QLabel>
 #include <QGroupBox>
 #include <QDateEdit>
 #include <QCheckBox>
@@ -59,6 +60,7 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   auto land_button           = new QPushButton("Land");
   auto pos_hold_button       = new QPushButton("Position Hold");
   auto tracker_enable_button = new QPushButton("Tracker Enable");
+  auto tracker_reset_button  = new QPushButton("Tracker Stop");
 
   // Make a takeoff slider panel
   auto takeoff_vlayout = new QHBoxLayout();
@@ -71,6 +73,7 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   uav_control_panel_vlayout->addWidget(land_button);
   uav_control_panel_vlayout->addWidget(pos_hold_button);
   uav_control_panel_vlayout->addWidget(tracker_enable_button);
+  uav_control_panel_vlayout->addWidget(tracker_reset_button);
 
   // UAV control panel group
   auto uav_control_panel = new QGroupBox(tr("UAV Control Panel"));
@@ -85,7 +88,16 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           &UAVOperatorPanel::takeoff_slider_released);
   connect(
     land_button, &QPushButton::released, this, &UAVOperatorPanel::land_button_released);
-
+  connect(
+    pos_hold_button, &QPushButton::released, this, &UAVOperatorPanel::pos_hold_released);
+  connect(tracker_enable_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::tracker_enable_released);
+  connect(tracker_reset_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::tracker_reset_released);
   /* MISSION CONTROL */
 
   // Mission Control widgets
@@ -116,12 +128,12 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   auto mission_status_label = new QLabel(tr("Mission Status"));
   auto task_status_label    = new QLabel(tr("Task Status"));
 
-  auto carrot_status_text  = new QLabel(tr("NO MESSAGES"));
+  m_carrot_status_text     = new QLabel(tr("NO MESSAGES"));
   auto tracker_status_text = new QLabel(tr("NO MESSAGES"));
   auto mission_status_text = new QLabel(tr("NO MESSAGES"));
   auto task_status_text    = new QLabel(tr("NO MESSAGES"));
 
-  carrot_status_text->setStyleSheet(border_style);
+  m_carrot_status_text->setStyleSheet(border_style);
   tracker_status_text->setStyleSheet(border_style);
   mission_status_text->setStyleSheet(border_style);
   task_status_text->setStyleSheet(border_style);
@@ -129,7 +141,7 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   // Status panel layout
   auto status_panel_layout = new QGridLayout();
   status_panel_layout->addWidget(carrot_status_label, 0, 0, Qt::AlignCenter);
-  status_panel_layout->addWidget(carrot_status_text, 0, 1);
+  status_panel_layout->addWidget(m_carrot_status_text, 0, 1);
   status_panel_layout->addWidget(tracker_status_label, 1, 0, Qt::AlignCenter);
   status_panel_layout->addWidget(tracker_status_text, 1, 1);
   status_panel_layout->addWidget(mission_status_label, 2, 0, Qt::AlignCenter);
@@ -143,10 +155,26 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   status_panel->setSizePolicy(sp);
   status_panel->setLayout(status_panel_layout);
 
+  // Status panel connections
+
+  connect(this,
+          &UAVOperatorPanel::update_carrot_status,
+          m_carrot_status_text,
+          &QLabel::setText);
+
   /* MAIN SETUP */
 
-  // Outer Layer
+  // Start a thread for updating labels
+  auto label_update_timer_thread = new QThread;
+  label_update_timer_thread->start();
 
+  // Make a timer and move it to thread to update labels
+  auto label_update_timer = new QTimer;
+  label_update_timer->setInterval(1000);
+  connect(
+    label_update_timer, &QTimer::timeout, this, &UAVOperatorPanel::update_status_labels);
+  label_update_timer->start();
+  label_update_timer->moveToThread(label_update_timer_thread);
 
   // Make a top row layout
   auto main_grid = new QGridLayout;
@@ -156,6 +184,35 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
   widget_->setLayout(main_grid);
   context.addWidget(widget_);
+}
+
+void UAVOperatorPanel::update_status_labels()
+{
+  ROS_INFO("[UAVOperatorPanel] timer");
+  const auto carrot_status = m_uav_handle.getCarrotStatus();
+  ROS_INFO("[%s]", carrot_status.c_str());
+  m_carrot_status_text->setText(QString::fromStdString(carrot_status));
+}
+
+void UAVOperatorPanel::tracker_enable_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Tracker enable released");
+  auto [success, message] = m_uav_handle.enableTracker();
+  make_a_simple_msg_box("Tracker enable response", message);
+}
+
+void UAVOperatorPanel::tracker_reset_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Tracker reset released");
+  auto [success, message] = m_uav_handle.resetTracker();
+  make_a_simple_msg_box("Tracker reset response", message);
+}
+
+void UAVOperatorPanel::pos_hold_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Position hold released");
+  auto [success, message] = m_uav_handle.enablePositionHold();
+  make_a_simple_msg_box("Position hold response", message);
 }
 
 void UAVOperatorPanel::land_button_released()

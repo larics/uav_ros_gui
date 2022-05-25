@@ -5,17 +5,18 @@
 
 #include <ros/ros.h>
 
+#include <QLabel>
 #include <QWidget>
 #include <QObject>
 #include <QSlider>
 
 namespace uav_ros_gui {
 
-class UAVOperatorPanel : public rqt_gui_cpp::Plugin {
-Q_OBJECT
+class UAVOperatorPanel : public rqt_gui_cpp::Plugin
+{
+  Q_OBJECT
 
 public:
-
   /* ======================================================================== */
   /* Constructor/Destructor                                                   */
   /* ======================================================================== */
@@ -41,7 +42,6 @@ public:
                        const qt_gui_cpp::Settings& instance_settings) override;
 
 private:
-
   /* ======================================================================== */
   /* Constants                                                                */
   /* ======================================================================== */
@@ -56,9 +56,11 @@ private:
 
   ros::NodeHandle nh_;
 
-  QSlider* m_takeoff_slider;
-
+  QSlider*         m_takeoff_slider;
+  QTimer*          m_label_update_timer;
   uav_ros_api::UAV m_uav_handle;
+
+  QLabel* m_carrot_status_text;
 
   /* ======================================================================== */
   /* Methods                                                                  */
@@ -71,11 +73,9 @@ private:
   /* ======================================================================== */
 
 
-
   /* ======================================================================== */
   /* Callbacks                                                                */
   /* ======================================================================== */
-
 
 
 protected slots:
@@ -86,14 +86,17 @@ protected slots:
 
   void takeoff_slider_released();
   void land_button_released();
+  void tracker_enable_released();
+  void tracker_reset_released();
+  void pos_hold_released();
+  void update_status_labels();
+
 signals:
 
   /* ======================================================================== */
   /* Signals                                                                  */
   /* ======================================================================== */
-
-
-
+  void update_carrot_status(QString);
 };
 
-} // namespace
+}// namespace uav_ros_gui
