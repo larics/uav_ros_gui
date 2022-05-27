@@ -1,8 +1,14 @@
+#include "uav_ros_msgs/Waypoint.h"
+#include "uav_ros_msgs/WaypointStatus.h"
+#include <iomanip>
+#include <ios>
+#include <tuple>
 #include <uav_ros_gui/uav_ros_api.hpp>
 #include <uav_ros_msgs/ArmAndTakeoff.h>
 #include <uav_ros_msgs/Land.h>
 #include <std_srvs/Empty.h>
 #include <std_srvs/SetBool.h>
+#include <sstream>
 
 uav_ros_api::UAV::UAV()
 {
@@ -17,6 +23,7 @@ uav_ros_api::UAV::UAV()
   m_start_mission_client =
     m_nh.serviceClient<std_srvs::Empty>("mission_loader/publish_waypoints");
   m_clear_mission_client = m_nh.serviceClient<std_srvs::SetBool>("clear_waypoints");
+  m_task_confirm_client  = m_nh.serviceClient<std_srvs::SetBool>("pickup_task/confirm");
 
   m_carrot_status_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "carrot/status");
@@ -28,9 +35,12 @@ uav_ros_api::UAV::UAV()
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "task/state");
   m_task_info_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "task/status");
+  m_wpinfo_handler = ros_util::CreateTopicHandlerMutexed<uav_ros_msgs::WaypointStatus>(
+    m_nh, "waypoint_status");
 
   ROS_INFO("[UAV] Nemaspace %s", m_nh.getNamespace().c_str());
 }
+
 
 std::string uav_ros_api::UAV::getCarrotStatus()
 {
@@ -49,6 +59,64 @@ std::string uav_ros_api::UAV::getTaskStatus()
   return get_status(m_task_status_handler);
 }
 std::string uav_ros_api::UAV::getTaskInfo() { return get_status(m_task_info_handler); }
+
+std::tuple<std::string, uav_ros_msgs::WaypointStatus>
+  uav_ros_api::UAV::getWaypointStatus()
+{
+  if (m_wpinfo_handler == nullptr || !m_wpinfo_handler->isMessageRecieved()) {
+    return std::make_tuple<std::string, uav_ros_msgs::WaypointStatus>("NO MESSAGES", {});
+  }
+
+  std::stringstream ss;
+  auto              data = m_wpinfo_handler->getData();
+  ss << std::setprecision(3) << "Position: [ " << data.current_wp.pose.pose.position.x
+     << ", " << data.current_wp.pose.pose.position.x << ", "
+     << data.current_wp.pose.pose.position.z << " ]"
+     << "\n";
+  ss << std::setprecision(3) << "Orientation: [ "
+     << data.current_wp.pose.pose.orientation.x << ", "
+     << data.current_wp.pose.pose.orientation.x << ", "
+     << data.current_wp.pose.pose.orientation.z << ", "
+     << data.current_wp.pose.pose.orientation.w << " ]"
+     << "\n";
+  ss << "Tasks:\n";
+  for (const auto& task : data.current_wp.tasks) {
+    ss << " - " << task.name << ", id = " << task.id << "\n";
+  }
+  ss << "Status:\n";
+  ss << "Distance to waypoint: " << data.distance_to_wp << "\n";
+  ss << std::boolalpha << "Waiting: " << static_cast<bool>(data.waiting_at_wp) << "\n";
+  ss << std::boolalpha << "Flying: " << static_cast<bool>(data.flying_to_wp) << "\n";
+  return std::make_tuple<std::string, uav_ros_msgs::WaypointStatus>(ss.str(),
+                                                                    std::move(data));
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::confirmTask()
+{
+  std_srvs::SetBool task_srv;
+  task_srv.request.data = true;
+  auto success          = m_task_confirm_client.call(task_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to confirm task");
+    return std::make_tuple<bool, std::string>(false, "Unable to confirm task");
+  }
+
+  return std::make_tuple<bool, std::string>(task_srv.response.success,
+                                            std::string(task_srv.response.message));
+}
+std::tuple<bool, std::string> uav_ros_api::UAV::refuteTask()
+{
+  std_srvs::SetBool task_srv;
+  task_srv.request.data = false;
+  auto success          = m_task_confirm_client.call(task_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to confirm task");
+    return std::make_tuple<bool, std::string>(false, "Unable to confirm task");
+  }
+
+  return std::make_tuple<bool, std::string>(task_srv.response.success,
+                                            std::string(task_srv.response.message));
+}
 
 std::tuple<bool, std::string> uav_ros_api::UAV::publishWaypoints()
 {

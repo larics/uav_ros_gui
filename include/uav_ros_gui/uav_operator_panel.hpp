@@ -65,6 +65,7 @@ private:
   QLabel* m_mission_status_text;
   QLabel* m_task_status_text;
   QLabel* m_task_info_text;
+  QLabel* m_mission_info_text;
 
   /* ======================================================================== */
   /* Methods                                                                  */
@@ -95,6 +96,8 @@ protected slots:
   void pos_hold_released();
   void start_mission_released();
   void clear_mission_released();
+  void task_confirm_released();
+  void task_refute_released();
   void update_status_labels();
 
 signals:

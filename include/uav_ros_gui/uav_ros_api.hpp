@@ -6,9 +6,12 @@
 #include <ros/ros.h>
 #include <uav_ros_lib/topic_handler.hpp>
 #include <std_msgs/String.h>
+#include <uav_ros_msgs/WaypointStatus.h>
 
 namespace uav_ros_api {
 using StringTopicHandler = ros_util::TopicHandlerMutexed<std_msgs::String>;
+using WPInfoHandler      = ros_util::TopicHandlerMutexed<uav_ros_msgs::WaypointStatus>;
+
 class UAV
 {
 public:
@@ -24,12 +27,15 @@ public:
   std::tuple<bool, std::string> enablePositionHold();
   std::tuple<bool, std::string> publishWaypoints();
   std::tuple<bool, std::string> clearWaypoints();
+  std::tuple<bool, std::string> confirmTask();
+  std::tuple<bool, std::string> refuteTask();
 
-  std::string getCarrotStatus();
-  std::string getTrackerStatus();
-  std::string getMissionStatus();
-  std::string getTaskStatus();
-  std::string getTaskInfo();
+  std::string                                           getCarrotStatus();
+  std::string                                           getTrackerStatus();
+  std::string                                           getMissionStatus();
+  std::string                                           getTaskStatus();
+  std::string                                           getTaskInfo();
+  std::tuple<std::string, uav_ros_msgs::WaypointStatus> getWaypointStatus();
 
 private:
   template<typename T> std::string get_status(T& handler)
@@ -49,12 +55,14 @@ private:
   ros::ServiceClient m_pos_hold_client;
   ros::ServiceClient m_start_mission_client;
   ros::ServiceClient m_clear_mission_client;
+  ros::ServiceClient m_task_confirm_client;
 
   StringTopicHandler::Ptr m_carrot_status_handler;
   StringTopicHandler::Ptr m_tracker_status_handler;
   StringTopicHandler::Ptr m_mission_status_handler;
   StringTopicHandler::Ptr m_task_status_handler;
   StringTopicHandler::Ptr m_task_info_handler;
+  WPInfoHandler::Ptr      m_wpinfo_handler;
 
   static constexpr auto TAKEOFF_TIMEOUT = 2.0;
 };

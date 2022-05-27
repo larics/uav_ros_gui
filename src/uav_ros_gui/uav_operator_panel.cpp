@@ -37,7 +37,6 @@ UAVOperatorPanel::UAVOperatorPanel() : rqt_gui_cpp::Plugin(), widget_(nullptr)
 void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 {
   widget_ = new QWidget();
-  // ui_.setupUi(widget_);
   if (context.serialNumber() > 1) {
     widget_->setWindowTitle(widget_->windowTitle() + " ("
                             + QString::number(context.serialNumber()) + ")");
@@ -102,17 +101,21 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
   // Mission Control widgets
   auto mission_info_label = new QLabel(tr("Mission Info"));
-  auto mission_info_text  = new QLabel("NO MESSAGES");
-  mission_info_text->setStyleSheet(border_style);
+  m_mission_info_text     = new QLabel("NO MESSAGES");
+  m_mission_info_text->setStyleSheet(border_style);
   auto mission_start_button = new QPushButton("Start Mission");
   auto mission_stop_button  = new QPushButton("Stop Mission");
+  auto task_confirm_button  = new QPushButton("Task Confirm");
+  auto task_refute_button   = new QPushButton("Task Refute");
 
   // Mission Control panel layout
   auto mission_control_panel_grid = new QGridLayout();
   mission_control_panel_grid->addWidget(mission_start_button, 1, 0);
   mission_control_panel_grid->addWidget(mission_stop_button, 1, 1);
   mission_control_panel_grid->addWidget(mission_info_label, 0, 0, Qt::AlignCenter);
-  mission_control_panel_grid->addWidget(mission_info_text, 0, 1);
+  mission_control_panel_grid->addWidget(m_mission_info_text, 0, 1);
+  mission_control_panel_grid->addWidget(task_confirm_button, 2, 0);
+  mission_control_panel_grid->addWidget(task_refute_button, 2, 1);
 
   // Mission control panel group
   auto mission_control_panel = new QGroupBox(tr("Mission Control Panel"));
@@ -130,7 +133,14 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           &QPushButton::released,
           this,
           &UAVOperatorPanel::clear_mission_released);
-
+  connect(task_confirm_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::task_confirm_released);
+  connect(task_refute_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::task_refute_released);
   /* STATUS PANEL */
 
   // Status panel widgets
@@ -195,8 +205,8 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   // Make a top row layout
   auto main_grid = new QGridLayout;
   main_grid->addWidget(uav_control_panel, 0, 0);
-  main_grid->addWidget(mission_control_panel, 0, 1);
-  main_grid->addWidget(status_panel, 1, 0, 1, 2);
+  main_grid->addWidget(mission_control_panel, 0, 1, 2, 1);
+  main_grid->addWidget(status_panel, 1, 0);
 
   widget_->setLayout(main_grid);
   context.addWidget(widget_);
@@ -209,6 +219,22 @@ void UAVOperatorPanel::update_status_labels()
   m_mission_status_text->setText(QString::fromStdString(m_uav_handle.getMissionStatus()));
   m_task_status_text->setText(QString::fromStdString(m_uav_handle.getTaskStatus()));
   m_task_info_text->setText(QString::fromStdString(m_uav_handle.getTaskInfo()));
+  m_mission_info_text->setText(
+    QString::fromStdString(std::get<0>(m_uav_handle.getWaypointStatus())));
+}
+
+void UAVOperatorPanel::task_refute_released()
+{
+  ROS_INFO("[UAVOperatorPanel] task refute released");
+  auto [success, message] = m_uav_handle.refuteTask();
+  make_a_simple_msg_box("Task refute response", message);
+}
+
+void UAVOperatorPanel::task_confirm_released()
+{
+  ROS_INFO("[UAVOperatorPanel] task confirm released");
+  auto [success, message] = m_uav_handle.confirmTask();
+  make_a_simple_msg_box("Task confirm response", message);
 }
 
 void UAVOperatorPanel::tracker_enable_released()
