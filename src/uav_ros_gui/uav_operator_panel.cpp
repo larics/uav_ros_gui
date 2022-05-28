@@ -107,6 +107,10 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   auto mission_stop_button  = new QPushButton("Stop Mission");
   auto task_confirm_button  = new QPushButton("Task Confirm");
   auto task_refute_button   = new QPushButton("Task Refute");
+  auto manipulator_retract  = new QPushButton("Manipulator Retract");
+  auto manipulator_expand   = new QPushButton("Manipulator Expand");
+  auto take_wall_point      = new QPushButton("Take Wall Point");
+  auto take_brick_point     = new QPushButton("Take Brick Point");
 
   // Mission Control panel layout
   auto mission_control_panel_grid = new QGridLayout();
@@ -116,6 +120,10 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   mission_control_panel_grid->addWidget(m_mission_info_text, 0, 1);
   mission_control_panel_grid->addWidget(task_confirm_button, 2, 0);
   mission_control_panel_grid->addWidget(task_refute_button, 2, 1);
+  mission_control_panel_grid->addWidget(manipulator_retract, 3, 0);
+  mission_control_panel_grid->addWidget(manipulator_expand, 3, 1);
+  mission_control_panel_grid->addWidget(take_wall_point, 4, 0);
+  mission_control_panel_grid->addWidget(take_brick_point, 4, 1);
 
   // Mission control panel group
   auto mission_control_panel = new QGroupBox(tr("Mission Control Panel"));
