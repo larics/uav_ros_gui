@@ -1,3 +1,4 @@
+#include "dynamic_reconfigure/BoolParameter.h"
 #include "uav_ros_msgs/Waypoint.h"
 #include "uav_ros_msgs/WaypointStatus.h"
 #include <iomanip>
@@ -9,6 +10,7 @@
 #include <std_srvs/Empty.h>
 #include <std_srvs/SetBool.h>
 #include <sstream>
+#include <dynamic_reconfigure/Reconfigure.h>
 
 uav_ros_api::UAV::UAV()
 {
@@ -21,9 +23,13 @@ uav_ros_api::UAV::UAV()
   m_tracker_reset   = m_nh.serviceClient<std_srvs::Empty>("tracker/reset");
   m_pos_hold_client = m_nh.serviceClient<std_srvs::Empty>("position_hold");
   m_start_mission_client =
-    m_nh.serviceClient<std_srvs::Empty>("mission_generator/publish_waypoints");
+    m_nh.serviceClient<std_srvs::Empty>("mission_loader/publish_waypoints");
   m_clear_mission_client = m_nh.serviceClient<std_srvs::SetBool>("clear_waypoints");
   m_task_confirm_client  = m_nh.serviceClient<std_srvs::SetBool>("pickup_task/confirm");
+  m_take_wall_oriting_client = m_nh.serviceClient<std_srvs::Empty>("take_wall");
+  m_take_pickup_point_client = m_nh.serviceClient<std_srvs::Empty>("take_pickup");
+  m_delta_retract =
+    m_nh.serviceClient<dynamic_reconfigure::Reconfigure>("/Stabilizer/set_parameters");
 
   m_carrot_status_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "carrot/status");
@@ -59,6 +65,61 @@ std::string uav_ros_api::UAV::getTaskStatus()
   return get_status(m_task_status_handler);
 }
 std::string uav_ros_api::UAV::getTaskInfo() { return get_status(m_task_info_handler); }
+
+std::tuple<bool, std::string> uav_ros_api::UAV::takeWallOrigin()
+{
+
+  std_srvs::Empty take_srv;
+  auto            success = m_take_wall_oriting_client.call(take_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable take wall origin.");
+    return std::make_tuple<bool, std::string>(false, "Unable to take wall origin");
+  }
+
+  return std::make_tuple<bool, std::string>(true, "Wall origin - taken.");
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::takePickupPoint()
+{
+  std_srvs::Empty take_srv;
+  auto            success = m_take_pickup_point_client.call(take_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable take pickup origin.");
+    return std::make_tuple<bool, std::string>(false, "Unable to take pickup origin");
+  }
+
+  return std::make_tuple<bool, std::string>(true, "Pickup origin - taken.");
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::deltaRetract()
+{
+  dynamic_reconfigure::Reconfigure   reconf_srv;
+  dynamic_reconfigure::BoolParameter bool_param;
+  bool_param.name  = "retract";
+  bool_param.value = true;
+  reconf_srv.request.config.bools.push_back(bool_param);
+  auto success = m_delta_retract.call(reconf_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to retract manipulator.");
+    return std::make_tuple<bool, std::string>(false, "Unable to retract manipulator");
+  }
+  return std::make_tuple<bool, std::string>(true, "Manipulator retracted");
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::deltaExpand()
+{
+  dynamic_reconfigure::Reconfigure   reconf_srv;
+  dynamic_reconfigure::BoolParameter bool_param;
+  bool_param.name  = "retract";
+  bool_param.value = false;
+  reconf_srv.request.config.bools.push_back(bool_param);
+  auto success = m_delta_retract.call(reconf_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to expand manipulator.");
+    return std::make_tuple<bool, std::string>(false, "Unable to expand manipulator");
+  }
+  return std::make_tuple<bool, std::string>(true, "Manipulator expanded");
+}
 
 std::tuple<std::string, uav_ros_msgs::WaypointStatus>
   uav_ros_api::UAV::getWaypointStatus()

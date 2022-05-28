@@ -29,6 +29,10 @@ public:
   std::tuple<bool, std::string> clearWaypoints();
   std::tuple<bool, std::string> confirmTask();
   std::tuple<bool, std::string> refuteTask();
+  std::tuple<bool, std::string> takeWallOrigin();
+  std::tuple<bool, std::string> takePickupPoint();
+  std::tuple<bool, std::string> deltaRetract();
+  std::tuple<bool, std::string> deltaExpand();
 
   std::string                                           getCarrotStatus();
   std::string                                           getTrackerStatus();
@@ -56,6 +60,9 @@ private:
   ros::ServiceClient m_start_mission_client;
   ros::ServiceClient m_clear_mission_client;
   ros::ServiceClient m_task_confirm_client;
+  ros::ServiceClient m_take_wall_oriting_client;
+  ros::ServiceClient m_take_pickup_point_client;
+  ros::ServiceClient m_delta_retract;
 
   StringTopicHandler::Ptr m_carrot_status_handler;
   StringTopicHandler::Ptr m_tracker_status_handler;
