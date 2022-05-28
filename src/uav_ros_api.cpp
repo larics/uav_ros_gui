@@ -21,7 +21,7 @@ uav_ros_api::UAV::UAV()
   m_tracker_reset   = m_nh.serviceClient<std_srvs::Empty>("tracker/reset");
   m_pos_hold_client = m_nh.serviceClient<std_srvs::Empty>("position_hold");
   m_start_mission_client =
-    m_nh.serviceClient<std_srvs::Empty>("mission_loader/publish_waypoints");
+    m_nh.serviceClient<std_srvs::Empty>("mission_generator/publish_waypoints");
   m_clear_mission_client = m_nh.serviceClient<std_srvs::SetBool>("clear_waypoints");
   m_task_confirm_client  = m_nh.serviceClient<std_srvs::SetBool>("pickup_task/confirm");
 
