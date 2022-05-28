@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
   <arg name="namespace"           default="$(env UAV_NAMESPACE)"/>
-  <arg name="perspctive"          default="config"/>
+  <arg name="perspctive"          default="$(find uav_ros_gui)/config/building_layout.perspective"/>
   <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui"
     output="screen" ns="$(arg namespace)" args="--perspective-file $(arg perspective)">
   </node>
