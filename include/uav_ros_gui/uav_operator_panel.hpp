@@ -99,6 +99,10 @@ protected slots:
   void task_confirm_released();
   void task_refute_released();
   void update_status_labels();
+  void manipulator_retract_released();
+  void manipulator_expand_released();
+  void take_wall_point_released();
+  void take_brick_point_released();
 
 signals:
 

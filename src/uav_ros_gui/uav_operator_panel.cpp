@@ -149,6 +149,23 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           &QPushButton::released,
           this,
           &UAVOperatorPanel::task_refute_released);
+  connect(manipulator_retract,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::manipulator_retract_released);
+  connect(manipulator_expand,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::manipulator_expand_released);
+  connect(take_wall_point,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::take_wall_point_released);
+  connect(take_brick_point,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::take_brick_point_released);
+
   /* STATUS PANEL */
 
   // Status panel widgets
@@ -230,6 +247,34 @@ void UAVOperatorPanel::update_status_labels()
   m_mission_info_text->setText(
     QString::fromStdString(std::get<0>(m_uav_handle.getWaypointStatus())));
 }
+
+void UAVOperatorPanel::manipulator_retract_released()
+{
+  ROS_INFO("[UAVOperatorPanel] retract released ");
+  auto [success, message] = m_uav_handle.deltaRetract();
+  make_a_simple_msg_box("Retract response", message);
+}
+
+void UAVOperatorPanel::manipulator_expand_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Expand released ");
+  auto [success, message] = m_uav_handle.deltaExpand();
+  make_a_simple_msg_box("Expand response", message);
+}
+void UAVOperatorPanel::take_wall_point_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Take wall released ");
+  auto [success, message] = m_uav_handle.takeWallOrigin();
+  make_a_simple_msg_box("Take wall origin response", message);
+}
+
+void UAVOperatorPanel::take_brick_point_released()
+{
+  ROS_INFO("[UAVOperatorPanel] Take pickup released ");
+  auto [success, message] = m_uav_handle.takePickupPoint();
+  make_a_simple_msg_box("Take pickup response", message);
+}
+
 
 void UAVOperatorPanel::task_refute_released()
 {
