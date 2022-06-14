@@ -1,11 +1,13 @@
 #include <qgridlayout.h>
 #include <qgroupbox.h>
 #include <qnamespace.h>
+#include <qpushbutton.h>
 #include <qspinbox.h>
 #include <uav_ros_gui/uav_operator_panel.hpp>
 
 #include <pluginlib/class_list_macros.h>
 
+#include <QtConcurrent/qtconcurrentrun.h>
 #include <QThread>
 #include <QTimer>
 #include <QSpinBox>
@@ -17,6 +19,7 @@
 #include <QDateEdit>
 #include <QCheckBox>
 #include <QMessageBox>
+#include <QFuture>
 
 namespace uav_ros_gui {
 
@@ -60,6 +63,11 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   auto pos_hold_button       = new QPushButton("Position Hold");
   auto tracker_enable_button = new QPushButton("Tracker Enable");
   auto tracker_reset_button  = new QPushButton("Tracker Stop");
+
+  // Takeoff slider in separate thread
+  auto takeoff_slider_thread = new QThread;
+  takeoff_slider_thread->start();
+  m_takeoff_slider->moveToThread(takeoff_slider_thread);
 
   // Make a takeoff slider panel
   auto takeoff_vlayout = new QHBoxLayout();
@@ -166,6 +174,44 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           this,
           &UAVOperatorPanel::take_brick_point_released);
 
+  /* CHALLENGE PANEL */
+  auto safety_status_label = new QLabel(tr("Safety Status"));
+  m_safety_status_text     = new QLabel(tr("NO MESSAGES"));
+  m_safety_status_text->setStyleSheet(border_style);
+
+  auto start_challenge_button = new QPushButton("Start Challenge");
+  auto manual_override_button = new QPushButton("Manual Override");
+  auto safety_off_button      = new QPushButton("Safety Off");
+
+  // Challenge Control panel layout
+  auto challenge_panel_layout = new QGridLayout();
+  challenge_panel_layout->addWidget(safety_status_label, 0, 0);
+  challenge_panel_layout->addWidget(m_safety_status_text, 0, 1);
+  challenge_panel_layout->addWidget(start_challenge_button, 1, 0, 1, 2);
+  challenge_panel_layout->addWidget(manual_override_button, 2, 0);
+  challenge_panel_layout->addWidget(safety_off_button, 2, 1);
+
+  // Challenge signals
+
+  connect(start_challenge_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::challenge_started_released);
+  connect(manual_override_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::safety_override_released);
+  connect(safety_off_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::safety_off_released);
+
+  // Challenge control panel group
+  auto challenge_panel = new QGroupBox(tr("Challenge Control Panel"));
+  challenge_panel->setLayout(challenge_panel_layout);
+  challenge_panel->setStyleSheet(box_style);
+  challenge_panel->setSizePolicy(sp);
+
   /* STATUS PANEL */
 
   // Status panel widgets
@@ -230,8 +276,9 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   // Make a top row layout
   auto main_grid = new QGridLayout;
   main_grid->addWidget(uav_control_panel, 0, 0);
-  main_grid->addWidget(mission_control_panel, 0, 1, 2, 1);
+  main_grid->addWidget(mission_control_panel, 0, 1);
   main_grid->addWidget(status_panel, 1, 0);
+  main_grid->addWidget(challenge_panel, 1, 1);
 
   widget_->setLayout(main_grid);
   context.addWidget(widget_);
@@ -244,8 +291,30 @@ void UAVOperatorPanel::update_status_labels()
   m_mission_status_text->setText(QString::fromStdString(m_uav_handle.getMissionStatus()));
   m_task_status_text->setText(QString::fromStdString(m_uav_handle.getTaskStatus()));
   m_task_info_text->setText(QString::fromStdString(m_uav_handle.getTaskInfo()));
+  m_safety_status_text->setText(QString::fromStdString(m_uav_handle.getSafetyStatus()));
   m_mission_info_text->setText(
     QString::fromStdString(std::get<0>(m_uav_handle.getWaypointStatus())));
+}
+
+void UAVOperatorPanel::challenge_started_released()
+{
+  ROS_INFO("[UAVOperatorPanel] challenge started released");
+  auto [success, message] = m_uav_handle.startChallenge();
+  make_a_simple_msg_box("Challenge started", message);
+}
+
+void UAVOperatorPanel::safety_override_released()
+{
+  ROS_INFO("[UAVOperatorPanel] safety override released");
+  auto [success, message] = m_uav_handle.safetyOverride();
+  make_a_simple_msg_box("Safety override", message);
+}
+
+void UAVOperatorPanel::safety_off_released()
+{
+  ROS_INFO("[UAVOperatorPanel] safety off released");
+  auto [success, message] = m_uav_handle.safetyOff();
+  make_a_simple_msg_box("Safety off", message);
 }
 
 void UAVOperatorPanel::manipulator_retract_released()

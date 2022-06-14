@@ -33,7 +33,11 @@ public:
   std::tuple<bool, std::string> takePickupPoint();
   std::tuple<bool, std::string> deltaRetract();
   std::tuple<bool, std::string> deltaExpand();
+  std::tuple<bool, std::string> startChallenge();
+  std::tuple<bool, std::string> safetyOverride();
+  std::tuple<bool, std::string> safetyOff();
 
+  std::string                                           getSafetyStatus();
   std::string                                           getCarrotStatus();
   std::string                                           getTrackerStatus();
   std::string                                           getMissionStatus();
@@ -51,6 +55,9 @@ private:
   ros::NodeHandle m_nh;
   ros::NodeHandle m_nh_private{ "~" };
 
+  /* Publisher */
+  ros::Publisher m_challenge_started_pub;
+
   /* Service */
   ros::ServiceClient m_takeoff_client;
   ros::ServiceClient m_land_client;
@@ -63,12 +70,14 @@ private:
   ros::ServiceClient m_take_wall_oriting_client;
   ros::ServiceClient m_take_pickup_point_client;
   ros::ServiceClient m_delta_retract;
+  ros::ServiceClient m_safety_client;
 
   StringTopicHandler::Ptr m_carrot_status_handler;
   StringTopicHandler::Ptr m_tracker_status_handler;
   StringTopicHandler::Ptr m_mission_status_handler;
   StringTopicHandler::Ptr m_task_status_handler;
   StringTopicHandler::Ptr m_task_info_handler;
+  StringTopicHandler::Ptr m_safety_status_handler;
   WPInfoHandler::Ptr      m_wpinfo_handler;
 
   static constexpr auto TAKEOFF_TIMEOUT = 2.0;

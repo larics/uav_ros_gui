@@ -66,6 +66,7 @@ private:
   QLabel* m_task_status_text;
   QLabel* m_task_info_text;
   QLabel* m_mission_info_text;
+  QLabel* m_safety_status_text;
 
   /* ======================================================================== */
   /* Methods                                                                  */
@@ -103,6 +104,9 @@ protected slots:
   void manipulator_expand_released();
   void take_wall_point_released();
   void take_brick_point_released();
+  void challenge_started_released();
+  void safety_override_released();
+  void safety_off_released();
 
 signals:
 

@@ -1,4 +1,6 @@
+#include <std_msgs/Bool.h>
 #include "dynamic_reconfigure/BoolParameter.h"
+#include "std_msgs/String.h"
 #include "uav_ros_msgs/Waypoint.h"
 #include "uav_ros_msgs/WaypointStatus.h"
 #include <iomanip>
@@ -30,6 +32,7 @@ uav_ros_api::UAV::UAV()
   m_take_pickup_point_client = m_nh.serviceClient<std_srvs::Empty>("take_pickup");
   m_delta_retract =
     m_nh.serviceClient<dynamic_reconfigure::Reconfigure>("/Stabilizer/set_parameters");
+  m_safety_client = m_nh.serviceClient<std_srvs::SetBool>("safety/override");
 
   m_carrot_status_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "carrot/status");
@@ -43,10 +46,18 @@ uav_ros_api::UAV::UAV()
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "task/status");
   m_wpinfo_handler = ros_util::CreateTopicHandlerMutexed<uav_ros_msgs::WaypointStatus>(
     m_nh, "waypoint_status");
+  m_safety_status_handler =
+    ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "safety/status");
 
-  ROS_INFO("[UAV] Nemaspace %s", m_nh.getNamespace().c_str());
+  m_challenge_started_pub = m_nh.advertise<std_msgs::Bool>("challenge_started", 1);
+  ROS_INFO("[UAV] Namespace %s", m_nh.getNamespace().c_str());
 }
 
+
+std::string uav_ros_api::UAV::getSafetyStatus()
+{
+  return get_status(m_safety_status_handler);
+}
 
 std::string uav_ros_api::UAV::getCarrotStatus()
 {
@@ -65,6 +76,41 @@ std::string uav_ros_api::UAV::getTaskStatus()
   return get_status(m_task_status_handler);
 }
 std::string uav_ros_api::UAV::getTaskInfo() { return get_status(m_task_info_handler); }
+
+std::tuple<bool, std::string> uav_ros_api::UAV::startChallenge()
+{
+  std_msgs::Bool msg;
+  msg.data = true;
+  m_challenge_started_pub.publish(msg);
+  return std::make_tuple<bool, std::string>(true, "Challenge started");
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::safetyOverride() {
+
+  std_srvs::SetBool safety_srv;
+  safety_srv.request.data = true;
+  auto success          = m_safety_client.call(safety_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to do safety override");
+    return std::make_tuple<bool, std::string>(false, "Unable to do safety override");
+  }
+
+  return std::make_tuple<bool, std::string>(safety_srv.response.success,
+                                            std::string(safety_srv.response.message));
+}
+std::tuple<bool, std::string> uav_ros_api::UAV::safetyOff() {
+
+  std_srvs::SetBool safety_srv;
+  safety_srv.request.data = false;
+  auto success          = m_safety_client.call(safety_srv);
+  if (!success) {
+    ROS_WARN("[UAV] Unable to turn safety off");
+    return std::make_tuple<bool, std::string>(false, "Unable to turn safety off");
+  }
+
+  return std::make_tuple<bool, std::string>(safety_srv.response.success,
+                                            std::string(safety_srv.response.message));
+}
 
 std::tuple<bool, std::string> uav_ros_api::UAV::takeWallOrigin()
 {
