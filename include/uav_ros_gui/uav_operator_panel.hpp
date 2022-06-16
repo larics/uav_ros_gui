@@ -67,6 +67,7 @@ private:
   QLabel* m_task_info_text;
   QLabel* m_mission_info_text;
   QLabel* m_safety_status_text;
+  QLabel* m_fence_status_text;
 
   /* ======================================================================== */
   /* Methods                                                                  */
@@ -107,6 +108,8 @@ protected slots:
   void challenge_started_released();
   void safety_override_released();
   void safety_off_released();
+  void fence_on_released();
+  void fence_off_released();
 
 signals:
 

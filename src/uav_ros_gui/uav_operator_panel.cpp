@@ -176,20 +176,30 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
 
   /* CHALLENGE PANEL */
   auto safety_status_label = new QLabel(tr("Safety Status"));
-  m_safety_status_text     = new QLabel(tr("NO MESSAGES"));
+  auto fence_status_label  = new QLabel(tr("Geofence Status"));
+
+  m_safety_status_text = new QLabel(tr("NO MESSAGES"));
+  m_fence_status_text  = new QLabel(tr("NO MESSAGES"));
+  m_fence_status_text->setStyleSheet(border_style);
   m_safety_status_text->setStyleSheet(border_style);
 
   auto start_challenge_button = new QPushButton("Start Challenge");
   auto manual_override_button = new QPushButton("Manual Override");
   auto safety_off_button      = new QPushButton("Safety Off");
+  auto fence_on_button        = new QPushButton("Geofence ON");
+  auto fence_off_button       = new QPushButton("Geofence OFF");
 
   // Challenge Control panel layout
   auto challenge_panel_layout = new QGridLayout();
   challenge_panel_layout->addWidget(safety_status_label, 0, 0);
   challenge_panel_layout->addWidget(m_safety_status_text, 0, 1);
-  challenge_panel_layout->addWidget(start_challenge_button, 1, 0, 1, 2);
-  challenge_panel_layout->addWidget(manual_override_button, 2, 0);
-  challenge_panel_layout->addWidget(safety_off_button, 2, 1);
+  challenge_panel_layout->addWidget(fence_status_label, 1, 0);
+  challenge_panel_layout->addWidget(m_fence_status_text, 1, 1);
+  challenge_panel_layout->addWidget(start_challenge_button, 2, 0, 1, 2);
+  challenge_panel_layout->addWidget(manual_override_button, 3, 0);
+  challenge_panel_layout->addWidget(safety_off_button, 3, 1);
+  challenge_panel_layout->addWidget(fence_off_button, 4, 0);
+  challenge_panel_layout->addWidget(fence_on_button, 4, 1);
 
   // Challenge signals
 
@@ -205,6 +215,12 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           &QPushButton::released,
           this,
           &UAVOperatorPanel::safety_off_released);
+  connect(
+    fence_on_button, &QPushButton::released, this, &UAVOperatorPanel::fence_on_released);
+  connect(fence_off_button,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::fence_off_released);
 
   // Challenge control panel group
   auto challenge_panel = new QGroupBox(tr("Challenge Control Panel"));
@@ -292,8 +308,25 @@ void UAVOperatorPanel::update_status_labels()
   m_task_status_text->setText(QString::fromStdString(m_uav_handle.getTaskStatus()));
   m_task_info_text->setText(QString::fromStdString(m_uav_handle.getTaskInfo()));
   m_safety_status_text->setText(QString::fromStdString(m_uav_handle.getSafetyStatus()));
+  m_fence_status_text->setText(QString::fromStdString(m_uav_handle.getGeofenceStatus()));
   m_mission_info_text->setText(
     QString::fromStdString(std::get<0>(m_uav_handle.getWaypointStatus())));
+}
+
+void UAVOperatorPanel::fence_on_released()
+{
+
+  ROS_INFO("[UAVOperatorPanel] fence on released");
+  auto [success, message] = m_uav_handle.setGeofence(true);
+  make_a_simple_msg_box("Geofence request", message);
+}
+
+void UAVOperatorPanel::fence_off_released()
+{
+
+  ROS_INFO("[UAVOperatorPanel] fence off released");
+  auto [success, message] = m_uav_handle.setGeofence(false);
+  make_a_simple_msg_box("Geofence request", message);
 }
 
 void UAVOperatorPanel::challenge_started_released()

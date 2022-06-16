@@ -36,13 +36,16 @@ public:
   std::tuple<bool, std::string> startChallenge();
   std::tuple<bool, std::string> safetyOverride();
   std::tuple<bool, std::string> safetyOff();
+  std::tuple<bool, std::string> setGeofence(bool enabled);
 
-  std::string                                           getSafetyStatus();
-  std::string                                           getCarrotStatus();
-  std::string                                           getTrackerStatus();
-  std::string                                           getMissionStatus();
-  std::string                                           getTaskStatus();
-  std::string                                           getTaskInfo();
+  std::string getSafetyStatus();
+  std::string getCarrotStatus();
+  std::string getTrackerStatus();
+  std::string getMissionStatus();
+  std::string getTaskStatus();
+  std::string getTaskInfo();
+  std::string getGeofenceStatus();
+
   std::tuple<std::string, uav_ros_msgs::WaypointStatus> getWaypointStatus();
 
 private:
@@ -71,6 +74,7 @@ private:
   ros::ServiceClient m_take_pickup_point_client;
   ros::ServiceClient m_delta_retract;
   ros::ServiceClient m_safety_client;
+  ros::ServiceClient m_geofence_client;
 
   StringTopicHandler::Ptr m_carrot_status_handler;
   StringTopicHandler::Ptr m_tracker_status_handler;
@@ -78,7 +82,9 @@ private:
   StringTopicHandler::Ptr m_task_status_handler;
   StringTopicHandler::Ptr m_task_info_handler;
   StringTopicHandler::Ptr m_safety_status_handler;
-  WPInfoHandler::Ptr      m_wpinfo_handler;
+  StringTopicHandler::Ptr m_geofence_status_handler;
+
+  WPInfoHandler::Ptr m_wpinfo_handler;
 
   static constexpr auto TAKEOFF_TIMEOUT = 2.0;
 };
