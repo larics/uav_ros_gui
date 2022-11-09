@@ -37,6 +37,8 @@ public:
   std::tuple<bool, std::string> safetyOverride();
   std::tuple<bool, std::string> safetyOff();
   std::tuple<bool, std::string> setGeofence(bool enabled);
+  std::tuple<bool, std::string> uploadClicker();
+  std::tuple<bool, std::string> clearClicker();
 
   std::string getSafetyStatus();
   std::string getCarrotStatus();
@@ -75,6 +77,8 @@ private:
   ros::ServiceClient m_delta_retract;
   ros::ServiceClient m_safety_client;
   ros::ServiceClient m_geofence_client;
+  ros::ServiceClient m_upload_clicker;
+  ros::ServiceClient m_clear_clicker;
 
   StringTopicHandler::Ptr m_carrot_status_handler;
   StringTopicHandler::Ptr m_tracker_status_handler;

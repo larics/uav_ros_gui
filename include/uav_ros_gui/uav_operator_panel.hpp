@@ -110,6 +110,8 @@ protected slots:
   void safety_off_released();
   void fence_on_released();
   void fence_off_released();
+  void clear_clicker_released();
+  void upload_clicker_released();
 
 signals:
 

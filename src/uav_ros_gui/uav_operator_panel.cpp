@@ -112,6 +112,8 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   m_mission_info_text     = new QLabel("NO MESSAGES");
   m_mission_info_text->setStyleSheet(border_style);
   auto mission_start_button = new QPushButton("Start Mission");
+  auto upload_clicker       = new QPushButton("Upload Clicker");
+  auto clear_clicker        = new QPushButton("Clear Clicker");
   auto mission_stop_button  = new QPushButton("Stop Mission");
   auto task_confirm_button  = new QPushButton("Task Confirm");
   auto task_refute_button   = new QPushButton("Task Refute");
@@ -126,12 +128,14 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   mission_control_panel_grid->addWidget(mission_stop_button, 1, 1);
   mission_control_panel_grid->addWidget(mission_info_label, 0, 0, Qt::AlignCenter);
   mission_control_panel_grid->addWidget(m_mission_info_text, 0, 1);
-  mission_control_panel_grid->addWidget(task_confirm_button, 2, 0);
-  mission_control_panel_grid->addWidget(task_refute_button, 2, 1);
-  mission_control_panel_grid->addWidget(manipulator_retract, 3, 0);
-  mission_control_panel_grid->addWidget(manipulator_expand, 3, 1);
-  mission_control_panel_grid->addWidget(take_wall_point, 4, 0);
-  mission_control_panel_grid->addWidget(take_brick_point, 4, 1);
+  mission_control_panel_grid->addWidget(upload_clicker, 2, 0);
+  mission_control_panel_grid->addWidget(clear_clicker, 2, 1);
+  // mission_control_panel_grid->addWidget(task_refute_button, 2, 1);
+  // mission_control_panel_grid->addWidget(task_refute_button, 2, 1);
+  // mission_control_panel_grid->addWidget(manipulator_retract, 3, 0);
+  // mission_control_panel_grid->addWidget(manipulator_expand, 3, 1);
+  // mission_control_panel_grid->addWidget(take_wall_point, 4, 0);
+  // mission_control_panel_grid->addWidget(take_brick_point, 4, 1);
 
   // Mission control panel group
   auto mission_control_panel = new QGroupBox(tr("Mission Control Panel"));
@@ -173,6 +177,14 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
           &QPushButton::released,
           this,
           &UAVOperatorPanel::take_brick_point_released);
+  connect(clear_clicker,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::clear_clicker_released);
+  connect(upload_clicker,
+          &QPushButton::released,
+          this,
+          &UAVOperatorPanel::upload_clicker_released);
 
   /* CHALLENGE PANEL */
   auto safety_status_label = new QLabel(tr("Safety Status"));
@@ -294,7 +306,7 @@ void UAVOperatorPanel::initPlugin(qt_gui_cpp::PluginContext& context)
   main_grid->addWidget(uav_control_panel, 0, 0);
   main_grid->addWidget(mission_control_panel, 0, 1);
   main_grid->addWidget(status_panel, 1, 0);
-  main_grid->addWidget(challenge_panel, 1, 1);
+  // main_grid->addWidget(challenge_panel, 1, 1);
 
   widget_->setLayout(main_grid);
   context.addWidget(widget_);
@@ -311,6 +323,18 @@ void UAVOperatorPanel::update_status_labels()
   m_fence_status_text->setText(QString::fromStdString(m_uav_handle.getGeofenceStatus()));
   m_mission_info_text->setText(
     QString::fromStdString(std::get<0>(m_uav_handle.getWaypointStatus())));
+}
+
+void UAVOperatorPanel::clear_clicker_released() {
+  ROS_INFO("[UAVOperatorPanel] clear clicker released");
+  auto [success, message] = m_uav_handle.clearClicker();
+  make_a_simple_msg_box("Clear Clicker", message);
+}
+
+void UAVOperatorPanel::upload_clicker_released() {
+  ROS_INFO("[UAVOperatorPanel] upload cliecker released");
+  auto [success, message] = m_uav_handle.uploadClicker();
+  make_a_simple_msg_box("Upload Clicker", message);
 }
 
 void UAVOperatorPanel::fence_on_released()

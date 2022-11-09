@@ -35,6 +35,10 @@ uav_ros_api::UAV::UAV()
   m_safety_client   = m_nh.serviceClient<std_srvs::SetBool>("safety/override");
   m_geofence_client = m_nh.serviceClient<std_srvs::SetBool>("geofence/activate");
 
+  // RVIZ clicker
+  m_upload_clicker = m_nh.serviceClient<std_srvs::Empty>("rviz_clicker/publish_mission");
+  m_clear_clicker  = m_nh.serviceClient<std_srvs::Empty>("rviz_clicker/clear_waypoints");
+
   m_carrot_status_handler =
     ros_util::CreateTopicHandlerMutexed<std_msgs::String>(m_nh, "carrot/status");
   m_tracker_status_handler =
@@ -55,7 +59,6 @@ uav_ros_api::UAV::UAV()
   m_challenge_started_pub = m_nh.advertise<std_msgs::Bool>("challenge_started", 1);
   ROS_INFO("[UAV] Namespace %s", m_nh.getNamespace().c_str());
 }
-
 
 std::string uav_ros_api::UAV::getSafetyStatus()
 {
@@ -85,6 +88,18 @@ std::string uav_ros_api::UAV::getGeofenceStatus()
 }
 
 std::string uav_ros_api::UAV::getTaskInfo() { return get_status(m_task_info_handler); }
+
+std::tuple<bool, std::string> uav_ros_api::UAV::uploadClicker() {
+  std_srvs::Empty msg;
+  m_upload_clicker.call(msg);
+  return std::make_tuple<bool, std::string>(true, "Mission uploaded");
+}
+
+std::tuple<bool, std::string> uav_ros_api::UAV::clearClicker() {
+  std_srvs::Empty msg;
+  m_clear_clicker.call(msg);
+  return std::make_tuple<bool, std::string>(true, "Mission cleared");
+}
 
 std::tuple<bool, std::string> uav_ros_api::UAV::startChallenge()
 {
